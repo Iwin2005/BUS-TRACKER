@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TN Live Bus Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-grad: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
+            --secondary-grad: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            /* Subtle dot pattern */
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 24px 24px;
+            margin: 0;
+            padding: 0;
+            padding-bottom: 40px;
+            -webkit-tap-highlight-color: transparent;
+            color: var(--text-main);
+        }
+
+        /* --- Header Section --- */
+        .header { 
+            background: var(--primary-grad);
+            padding: 25px 20px 40px 20px;
+            border-radius: 0 0 24px 24px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.2);
+            margin-bottom: -25px; /* Pull search bar up */
+        }
+        
+        h1 { 
+            margin: 0; 
+            font-size: 1.5rem; 
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .subtitle { font-size: 0.9rem; opacity: 0.9; margin-top: 5px; }
+
+        /* --- Search Bar --- */
+        .controls {
+            display: flex; 
+            justify-content: center;
+            padding: 0 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .search-wrapper {
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+        }
+
+        input {
+            padding: 16px 20px; 
+            padding-left: 45px;
+            border: none;
+            border-radius: 16px; 
+            font-size: 16px;
+            width: 100%;
+            background: white;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        input:focus {
+            outline: none;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+        }
+
+        /* Search Icon CSS pseudo-element */
+        .search-wrapper::before {
+            content: "🔍";
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            opacity: 0.5;
+        }
+
+        /* --- Section Titles --- */
+        .section-wrapper {
+            margin-top: 40px;
+            padding: 0 15px;
+        }
+
+        .section-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .badge-tc { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+        .badge-ct { background: #ffe4e6; color: #9f1239; border: 1px solid #fecdd3; }
+
+        /* --- Grid Layout --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        /* --- Card Styles --- */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 1px solid rgba(255,255,255,0.5);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        /* Decorative colored bar on left */
+        .card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 6px;
+        }
+        .route-t-c .card::before { background: var(--primary-grad); }
+        .route-c-t .card::before { background: var(--secondary-grad); }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            padding-left: 12px;
+        }
+
+        .operator { 
+            font-weight: 700; 
+            font-size: 1.1rem; 
+            color: var(--text-main);
+            line-height: 1.3;
+        }
+
+        .time-badge {
+            background: #f1f5f9;
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 6px 10px;
+            border-radius: 8px;
+            white-space: nowrap;
+            margin-left: 10px;
+        }
+
+        .route-info {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            padding-left: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* --- Buttons --- */
+        .track-btn {
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: filter 0.2s, transform 0.1s;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .btn-tc { background: var(--primary-grad); }
+        .btn-ct { background: var(--secondary-grad); }
+
+        .track-btn:active { transform: scale(0.97); }
+        
+        /* Pulse Animation Dot */
+        .live-dot {
+            width: 8px; height: 8px; 
+            background: white; border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+            animation: pulse-white 2s infinite;
+        }
+        
+        @keyframes pulse-white {
+            0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        }
+
+        /* --- Modal Styles --- */
+        .modal-overlay {
+            display: none;
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            justify-content: center; align-items: flex-end;
+        }
+        @media (min-width: 768px) { .modal-overlay { align-items: center; } }
+
+        .modal-content {
+            background: white;
+            width: 100%; height: 92%;
+            border-radius: 24px 24px 0 0;
+            display: flex; flex-direction: column;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
+        }
+        @media (min-width: 768px) {
+            .modal-content {
+                width: 90%; height: 85%;
+                max-width: 1000px;
+                border-radius: 20px;
+                animation: fadeIn 0.25s ease-out;
+            }
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .modal-header {
+            padding: 18px 20px; 
+            border-bottom: 1px solid #e2e8f0;
+            display: flex; justify-content: space-between; align-items: center;
+            background: #fff;
+            border-radius: 24px 24px 0 0;
+        }
+        
+        .modal-title { font-weight: 700; font-size: 1.1rem; color: var(--text-main); }
+        
+        .close-btn {
+            background: #f1f5f9; color: #475569; border: none; 
+            padding: 8px 16px; border-radius: 30px; 
+            cursor: pointer; font-weight: 600; font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        .close-btn:hover { background: #e2e8f0; }
+
+        .iframe-container { flex-grow: 1; position: relative; background: #f8fafc; overflow: hidden; }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* Empty State */
+        .no-results {
+            text-align: center; padding: 40px; color: var(--text-sub);
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🚌 TN Live Bus Tracker</h1>
+        <div class="subtitle">Real-time location updates</div>
+    </div>
+
+    <div class="controls">
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" placeholder="Search bus name (e.g., SBM, VKV)..." onkeyup="filterBuses()">
+        </div>
+    </div>
+
+    <div id="mainContainer"></div>
+
+    <div id="mapModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="modalTitle" class="modal-title">Live Map</span>
+                <button class="close-btn" onclick="closeModal()">Close</button>
+            </div>
+            <div class="iframe-container">
+                <iframe id="mapFrame" src="" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // FULL DATASET
+        const buses = [
+            // ==========================================
+            // 1. TUTICORIN TO CHENNAI (Sorted by Time)
+            // ==========================================
+            { op: "VKV Tuticorin", time: "6:05 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/VKVTHIRUCHENDHUR-NELLORE-0500PM" },
+            { op: "TMV Tuticorin", time: "7:00 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/TMVUDANGUDI-CHENNAI-0630PM" },
+            { op: "R.R.R Travels", time: "7:10 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/TLRTTIRUCHIRAPALLI-CHENNAI-0200AM" },
+            { op: "DHARANI TRANS", time: "7:15 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/NASRNAZARETH-CHENNAI-0715PM" },
+            { op: "JJ Yatra", time: "7:30 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/YYRTIRUCHENDUR-CHENNAI-0700PM-1" },
+            { op: "Sri Siva", time: "7:30 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/VSIEKULASEKARAPATTINAM-CHENNAI-0500PM-1" },
+            { op: "PRM", time: "7:30 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/PRMRTHISAIYANVILAI-CHENNAI-0700PM" },
+            { op: "SBM", time: "7:30 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/BLSATHIRUCHENDHUR-CHENNAI-0600PM" },
+            { op: "DEVI", time: "7:35 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/ERRTUDANGUDI-CHENNAI-0530PM" },
+            { op: "Vignesh TAT", time: "7:50 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/VGTTUDANKUDI-CHENNAI-0545PM-3" },
+            { op: "Umarithangam", time: "8:00 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/GLIEKULASEKARAPATTINAM-CHENNAI-0530PM" },
+            { op: "Intercity", time: "8:00 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/INTRTIRUCHENDUR-CHENNAI-0740PM" },
+            { op: "Vivegam", time: "8:00 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/VVGTUDANKUDI-CHENNAI-0800PM" },
+            { op: "Muthu Travel", time: "8:05 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/MTHUUDANGUDI-CHENNAI-0800PM" },
+            { op: "Tranzking", time: "8:10 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/TKTTHISAYANVILAI-CHENNAI-0530PM" },
+            { op: "Devi", time: "8:10 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/ERRTSATHANKULAM-CHENNAI-0520PM" },
+            { op: "TMV Tuticorin", time: "8:15 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/TMVUDANGUDI-CHENNAI-0800PM" },
+            { op: "Sri SMS Travels", time: "8:20 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/SMSTNAZARATH-CHENNAI-0600PM-1" },
+            { op: "RPT", time: "8:20 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/RPTTTIRUCHENDUR-CHENNAI-1000AM" },
+            { op: "Vetri", time: "8:20 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/VTRUDANKUDI-CHENNAI0700PM" },
+            { op: "Intercity", time: "8:20 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/INTRTIRUCHENDUR-CHENNAI-0740PM" },
+            { op: "RASHIL TRAVELS", time: "8:25 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/THASUDANGUDI-CHENNAI-0615PM" },
+            { op: "Sri Siva", time: "8:30 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/VSIETHATTARMADAM-CHENNAI-0510PM" },
+            { op: "MNT Mutharamman", time: "8:30 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/UAMTHISAIYANVILAI-CHENNAI-0605PM" },
+            { op: "LION Travels", time: "8:30 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/LIONKARUR-CHENNAI-0820PM" },
+            { op: "Palslnt", time: "8:30 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/EVSPUDANGUDI-CHENNAI-0815PM" },
+            { op: "Senthur velan", time: "8:35 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/TNNTHISAIYANVILAI-CHENNAI-0645PM" },
+            { op: "Zing Bus", time: "8:40 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/ZNGBTIRUCHENDUR-CHENNAI-0700PM" },
+            { op: "TTT Travels", time: "8:40 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/TTTRNAZARETH-CHENNAI-0615PM" },
+            { op: "SBM TRANSPORT", time: "8:45 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/BLSAUDANGUDI-CHENNAI-0615PM" },
+            { op: "Vivegam Volvo", time: "9:10 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/VVGTTUTICORIN-CHENNAI-1000PM" },
+            { op: "National Travels", time: "9:15 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/NTCUDANKUDI-CHENNAI-0820PM" },
+            { op: "Intercity", time: "9:20 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/INTRTIRUCHENDUR-CHENNAI-0830PM" },
+            { op: "Zing Bus", time: "9:30 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/ZNGBTIRUCHENDUR-CHENNAI-0800PM" },
+            { op: "KKR Travels", time: "9:30 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/KTRVKLS-CHN715PM" },
+            { op: "SBM TRANSPORT", time: "9:35 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/BLSAUDANKUDI-CHENNAI-0745PM-1" },
+            { op: "JBS Travels", time: "9:45 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/BSVAUDANKUDI-CHENNAI-0745PM" },
+            { op: "MNT Mutharamman", time: "9:50 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/UAMTHISAIYANVILAI-CHENNAI-0720PM" },
+            { op: "Sri SMS Travels", time: "9:50 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/SMSTUDANKUDI-CHENNAI-0900PM-5" },
+            { op: "Sasi Travels", time: "10:00 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/RRSPEIKULAM-CHENNAI-0605PM" },
+            { op: "APPLE", time: "10:15 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/APBUDANGUDI-CHENNAI-0700PM" },
+            { op: "SBM TRANSPORT", time: "10:15 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/BLSATHIRUCHENDHUR-CHENNAI-0900PM" },
+            { op: "PRM Roadways", time: "10:25 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/PRMRTHIRUCHENDHUR-CHENNAI-0700PM" },
+            { op: "Tranz King", time: "10:30 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/TKTTHISAYANVILAI-CHENNAI-0800PM" },
+            { op: "MNT Mutharamman", time: "10:50 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/UAMTHISAIYANVILAI-CHENNAI-0820PM" },
+            { op: "TMV Travels", time: "10:50 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/TMVUDANGUDI-CHENNAI-0900PM" },
+            { op: "SBM TRANSPORT", time: "11:15 PM", route: "Tuty-Chennai", link: "https://reports.yourbus.in/trackbus/BLSATHIRUCHENDHUR-CHENNAI-1000PM" },
+
+            // ==========================================
+            // 2. CHENNAI TO TUTICORIN (Completely Updated)
+            // ==========================================
+            { op: "Thirumalaivasan", time: "6:10 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/TMVCHENNAI-UDANGUDI-0530PM-1" },
+            { op: "SBM TRANSPORT", time: "6:30 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/BLSACHENNAI-THIRUCHENDHUR-0530PM" },
+            { op: "PRM Roadway", time: "6:35 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/PRMRCHENNAI-THISAIYANVILAI-0545PM" },
+            { op: "SASI TRAVELS", time: "7:15 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/RRSCHENNAI-PEIKULAM-0825PM" },
+            { op: "PALSLNT Travels", time: "7:15 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/EVSPCHENNAI-UDANGUDI-0815PM" },
+            { op: "Thirumalaivasan", time: "7:20 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/TMVCHENNAI-UDANGUDI-0700PM-1" },
+            { op: "Sri Siva", time: "7:20 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/VSIECHENNAI-THATTARMADAM-0510PM" },
+            { op: "DEVI TRAVELS", time: "7:25 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/ERRTCHENNAI-UDANGUDI-0720PM" },
+            { op: "MNT Muthuramman", time: "7:30 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/UAMCHENNAI-THISAIYANVILAI-0535PM" },
+            { op: "Lion Travels", time: "7:35 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/LIONCHENNAI-NAZARETH-0550PM" },
+            { op: "DEVI TRAVELS", time: "7:50 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/ERRTCHENNAI-SATHANKULAM-0635PM" },
+            { op: "Umarithangam", time: "8:00 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/GLIECHENNAI-SATHANKULAM-0635PM" },
+            { op: "Senthur velan", time: "8:05 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/TNNCHENNAI-THISAIYANVILAI-0815PM" },
+            { op: "TTT Travels", time: "8:05 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/TTTRCHENNAI-NAZARETH-0725PM" },
+            { op: "zingbus plus", time: "8:10 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/ZNGBCHENNAI-TIRUCHENDUR-0735PM" },
+            { op: "Umarithangam", time: "8:15 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/GLIECHENNAI-KULASEKARAPATTINAM-0530PM" },
+            { op: "VKV Travels", time: "8:15 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/VKVCHENNAI-THIRUCHENDHUR-0630PM" },
+            { op: "IntrCity", time: "8:15 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/INTRCHENNAI-TIRUCHENDUR-0830PM" },
+            { op: "SBM TRANSPORT", time: "8:15 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/BLSACHENNAI-UDANGUDI-0630PM" },
+            { op: "RASHIL TRAVELS", time: "8:20 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/THASCHENNAI-UDANGUDI-0830PM" },
+            { op: "R.R.R Travels", time: "8:25 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/TLRTCHENNAI-UDANGUDI-0800PM" },
+            { op: "Sri SMS Travels", time: "8:35 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/SMSTCHENNAI-NAZARATH-1030PM" },
+            { op: "RP Tours", time: "8:35 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/RPTTCHENNAI-TIRUCHENDUR-0645PM" },
+            { op: "KKR Travels", time: "8:35 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/KTRVCHENNAI-KULASEKARAPATTINAM-0745PM" },
+            { op: "Thenmozhi", time: "8:40 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/TNMZCHENNAI-POTHAKALANVILAI-0930AM" },
+            { op: "Muthu Travels", time: "8:45 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/MTHUCHENNAI-UDANGUDI-0800PM" },
+            { op: "MNT Muthuramman", time: "8:55 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/UAMCHENNAI-THISAIYANVILAI-0840PM" },
+            { op: "SBM TRANSPORT", time: "9:15 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/BLSACHENNAI-UDANGUDI-0815PM-1" },
+            { op: "National Travels", time: "9:15 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/NTCCHENNAI-THIRUCHENDUR-0745PM" },
+            { op: "AL AYAAN", time: "9:20 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/AVRECHENNAI-UDANGUDI-0830PM" },
+            { op: "Sri Chengalamman", time: "9:30 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/RNRMCHENNAI-THIRUCHENDHUR-0630PM" },
+            { op: "AVK Travels", time: "10:00 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/AVKCHENNAI-UDANKUDI-0845PM" },
+            { op: "Apple Bus", time: "10:15 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/APBCHENNAI-UDANGUDI-0915PM-1" },
+            { op: "SBM TRANSPORT", time: "10:30 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/BLSACHENNAI-THIRUCHENDHUR-0930PM-1" },
+            { op: "VKV Travels", time: "11:35 PM", route: "Chennai-Tuty", link: "https://reports.yourbus.in/trackbus/VKVNELLORE-THIRUCHENDHUR-0430PM" }
+        ];
+
+        function createGridHTML(busList, routeType) {
+            if (busList.length === 0) return '';
+            
+            let btnClass = routeType === 'Tuty-Chennai' ? 'btn-tc' : 'btn-ct';
+            
+            let html = `<div class="grid ${routeType === 'Tuty-Chennai' ? 'route-t-c' : 'route-c-t'}">`;
+            busList.forEach(bus => {
+                html += `
+                    <div class="card">
+                        <div>
+                            <div class="card-header">
+                                <div class="operator">${bus.op}</div>
+                                <div class="time-badge">${bus.time}</div>
+                            </div>
+                            <div class="route-info">
+                                <span>📍</span> ${routeType === 'Tuty-Chennai' ? 'Tuticorin ➝ Chennai' : 'Chennai ➝ Tuticorin'}
+                            </div>
+                        </div>
+                        <button class="track-btn ${btnClass}" onclick="openMap('${bus.link}', '${bus.op}')">
+                            <div class="live-dot"></div> Track Live
+                        </button>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            return html;
+        }
+
+        function renderBuses(data) {
+            const container = document.getElementById('mainContainer');
+            
+            const tutyBuses = data.filter(b => b.route === 'Tuty-Chennai');
+            const chennaiBuses = data.filter(b => b.route === 'Chennai-Tuty');
+
+            let content = '';
+
+            // 1. Tuty -> Chennai
+            if (tutyBuses.length > 0) {
+                content += `<div class="section-wrapper">
+                    <div class="section-badge badge-tc">Tuticorin ➝ Chennai</div>
+                    ${createGridHTML(tutyBuses, 'Tuty-Chennai')}
+                </div>`;
+            }
+
+            // 2. Chennai -> Tuty
+            if (chennaiBuses.length > 0) {
+                content += `<div class="section-wrapper">
+                    <div class="section-badge badge-ct">Chennai ➝ Tuticorin</div>
+                    ${createGridHTML(chennaiBuses, 'Chennai-Tuty')}
+                </div>`;
+            }
+
+            if (content === '') {
+                content = '<div class="no-results">No buses found matching your search.</div>';
+            }
+
+            container.innerHTML = content;
+        }
+
+        function filterBuses() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = buses.filter(bus => {
+                return bus.op.toLowerCase().includes(search) || bus.time.toLowerCase().includes(search);
+            });
+            renderBuses(filtered);
+        }
+
+        // --- MAP POPUP FUNCTIONS ---
+        function openMap(url, operatorName) {
+            const modal = document.getElementById('mapModal');
+            document.getElementById('modalTitle').innerText = operatorName;
+            document.getElementById('mapFrame').src = url;
+            
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('mapModal');
+            modal.style.display = 'none';
+            document.getElementById('mapFrame').src = '';
+            document.body.style.overflow = 'auto';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('mapModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // Initialize
+        renderBuses(buses);
+    </script>
+</body>
+</html>
